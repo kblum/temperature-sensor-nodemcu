@@ -10,9 +10,15 @@ OneWire oneWire(ONE_WIRE_PIN);
 // initialise temperature library
 DallasTemperature sensors(&oneWire);
 
+const byte DEVICE_ADDRESS_LENGTH = 8;
 byte deviceCount;
-byte deviceAddress[8];
 byte deviceIndex;
+
+struct Reading {
+  byte deviceAddress[DEVICE_ADDRESS_LENGTH];
+  bool valid; // if a reading could be obtained from device
+  float temperature; // measured in degrees Celsius
+};
 
 /**
  * Initialise all sensors on 1-Wire bus.
@@ -46,9 +52,9 @@ void sensorInit() {
  * Example:
  *   { 0x28, 0xFF, 0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC }
  */
-void printAddress(byte address[8]) {
+void printAddress(byte address[DEVICE_ADDRESS_LENGTH]) {
   Serial.print(F("{ "));
-  for (uint8_t i = 0; i < 8; i++) {
+  for (uint8_t i = 0; i < DEVICE_ADDRESS_LENGTH; i++) {
     Serial.print(F("0x"));
     // zero-pad the address if necessary
     if (address[i] < 16) {
@@ -63,36 +69,57 @@ void printAddress(byte address[8]) {
   Serial.print(F(" }"));
 }
 
-void readSensors() {
+void readSensors(Reading readings[]) {
   // call sensors.requestTemperatures() to issue a global temperature request to all devices in the bus
   Serial.println(F("Requesting temperatures..."));
   sensors.requestTemperatures();
 
   for (deviceIndex = 0; deviceIndex < deviceCount; deviceIndex++) {
-    if (sensors.getAddress(deviceAddress, deviceIndex)) {
-      float temperature = sensors.getTempC(deviceAddress);
-      Serial.print(F("Device "));
-      Serial.print(deviceIndex);
-      Serial.print(F("; address: "));
-      printAddress(deviceAddress);
-      Serial.print(F("; temperature: "));
-      Serial.println(temperature);
+    Reading* reading = &readings[deviceIndex];
+    if (sensors.getAddress(readings->deviceAddress, deviceIndex)) {
+      float temperature = sensors.getTempC(readings->deviceAddress);
+      reading->valid = true;
+      reading->temperature = temperature;
     } else {
+      // unable to read from device; therefore clear values
+      reading->valid = false;
+      memset(reading->deviceAddress, 0, sizeof(reading->deviceAddress));
+      reading->temperature = 0;
       Serial.print(F("Unable to read from device: "));
       Serial.println(deviceIndex);
     }
   }
 }
 
+void printReadings(Reading readings[]) {
+  Serial.println(F("Readings:"));
+  for (deviceIndex = 0; deviceIndex < deviceCount; deviceIndex++) {
+      Reading reading = readings[deviceIndex];
+      if (reading.valid) {
+        Serial.print(F("Device "));
+        Serial.print(deviceIndex);
+        Serial.print(F("; address: "));
+        printAddress(reading.deviceAddress);
+        Serial.print(F("; temperature: "));
+        Serial.println(reading.temperature);
+      }
+  }
+}
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("Starting...");
+  Serial.println(F("Starting..."));
 
   sensorInit();
+
+  Serial.println(F("Setup done"));
 }
 
 void loop() {
-  readSensors();
+  Reading readings[deviceCount];
+  readSensors(readings);
+
+  printReadings(readings);
+
   delay(2000);
 }
