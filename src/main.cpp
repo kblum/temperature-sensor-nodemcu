@@ -76,8 +76,8 @@ void readSensors(Reading readings[]) {
 
   for (deviceIndex = 0; deviceIndex < deviceCount; deviceIndex++) {
     Reading* reading = &readings[deviceIndex];
-    if (sensors.getAddress(readings->deviceAddress, deviceIndex)) {
-      float temperature = sensors.getTempC(readings->deviceAddress);
+    if (sensors.getAddress(reading->deviceAddress, deviceIndex)) {
+      float temperature = sensors.getTempC(reading->deviceAddress);
       reading->valid = true;
       reading->temperature = temperature;
     } else {
