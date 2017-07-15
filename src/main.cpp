@@ -20,6 +20,10 @@ const byte DEVICE_ADDRESS_LENGTH = 8;
 byte deviceCount;
 byte deviceIndex;
 
+unsigned long interval; // polling interval in milliseconds
+unsigned long lastRunTime;
+unsigned long currentTime;
+
 struct Reading {
   byte deviceAddress[DEVICE_ADDRESS_LENGTH];
   bool valid; // if a reading could be obtained from device
@@ -227,9 +231,25 @@ void sendReadings(Reading readings[]) {
   client.stop();
 }
 
+/**
+ * Read and process data from sensors (one cycle).
+ * Will be performed in a loop.
+ */
+void run() {
+  Reading readings[deviceCount];
+  readSensors(readings);
+
+  printReadings(readings);
+
+  wifiConnect();
+  sendReadings(readings);
+  WiFi.disconnect();
+}
+
 void setup() {
   Serial.begin(115200);
   Serial.println(F("Starting..."));
+  delay(100);
 
   sensorInit();
 
@@ -240,18 +260,28 @@ void setup() {
   }
   delay(100);
 
+  // set polling interval
+  interval = (unsigned long)POLLING_INTERVAL_S * 1000;
+  Serial.print(F("Loop interval: "));
+  Serial.print(POLLING_INTERVAL_S);
+  Serial.print(F(" seconds => "));
+  Serial.print(interval);
+  Serial.println(F(" milliseconds"));
+
+  // initialise to current time
+  lastRunTime = millis();
+
   Serial.println(F("Setup done"));
+
+  // start first run after setup
+  run();
 }
 
 void loop() {
-  Reading readings[deviceCount];
-  readSensors(readings);
-
-  printReadings(readings);
-
-  wifiConnect();
-  sendReadings(readings);
-  WiFi.disconnect();
-
-  delay(2000);
+  // interval loop
+  currentTime = millis();
+  if (currentTime - lastRunTime > interval) {
+    lastRunTime = currentTime;
+    run();
+  }
 }

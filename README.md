@@ -19,6 +19,9 @@ Create a `src/config.h` file and populate with the following settings (substitut
 #define WLAN_SSID "SSID"
 #define WLAN_PASS "PASSWORD"
 
+// polling interval of loop in seconds
+#define POLLING_INTERVAL_S 300
+
 // API endpoint
 #define API_HOST "HOST"
 #define API_ENDPOINT "/api"
