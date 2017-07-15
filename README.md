@@ -12,7 +12,7 @@ The 1-Wire sensor bus should be connected to digital I/O pin D2.
 
 ## Configuration
 
-Create a `config.h` file and populate with the following settings (substituting in appropriate values):
+Create a `src/config.h` file and populate with the following settings (substituting in appropriate values):
 
 ```cpp
 // Wi-Fi credentials
