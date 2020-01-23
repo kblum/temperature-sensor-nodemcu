@@ -57,3 +57,18 @@ Examples of request body:
 ```
 
 The unique 64-bit serial code for each device (in hexadecimal format) is mapped to the temperature reading from the device.
+
+
+## Development
+
+Debug output will be written to the serial port, connecting with a baud rate of 115200.
+
+
+The PlatformIO CLI tools can be installed on macOS using [Homebrew](https://brew.sh) as follows:
+
+```sh
+brew install platformio
+```
+
+If the device is not recognised, then install the [CP210x USB to UART Bridge VCP Drivers
+](https://www.silabs.com/products/development-tools/software/usb-to-uart-bridge-vcp-drivers) from Silicon Labs. The extension must be approved on macOS.
